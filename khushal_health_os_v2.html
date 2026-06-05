@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khushal Health OS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#16161f;--bg4:#1c1c28;
+  --border:#ffffff12;--border2:#ffffff20;
+  --text:#e8e8f0;--muted:#6b6b80;--dim:#3a3a50;
+  --red:#ff4d6d;--amber:#ffb347;--green:#4dff91;--blue:#4d9fff;--purple:#a78bfa;--cyan:#4dfff3;--teal:#2dd4bf;
+  --red-dim:#ff4d6d22;--amber-dim:#ffb34722;--green-dim:#4dff9122;--blue-dim:#4d9fff22;--purple-dim:#a78bfa22;--teal-dim:#2dd4bf22;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Syne',sans-serif;letter-spacing:-0.02em}
+
+.header{padding:20px 28px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2)}
+.header-left{display:flex;align-items:center;gap:16px}
+.avatar{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#a78bfa,#4d9fff);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#fff;flex-shrink:0}
+.patient-name{font-family:'Syne',sans-serif;font-weight:700;font-size:18px}
+.patient-meta{color:var(--muted);font-size:11px;margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
+.meta-pill{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:10px}
+.meta-pill.blood{color:#ff8fa3;border-color:#ff4d6d44}
+.score-pill{background:var(--bg3);border:1px solid var(--border2);border-radius:100px;padding:8px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.score-num{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--amber)}
+.score-label{font-size:10px;color:var(--muted);line-height:1.4}
+.score-label span{display:block;color:var(--amber);font-size:9px}
+
+.nav{display:flex;gap:2px;padding:10px 28px;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.nav-btn{background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:6px 13px;border-radius:6px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;white-space:nowrap}
+.nav-btn:hover{color:var(--text);background:var(--bg3)}
+.nav-btn.active{color:var(--text);background:var(--bg4);border:1px solid var(--border2)}
+.nav-btn.new-tag{position:relative}
+.nav-btn.new-tag::after{content:'NEW';position:absolute;top:-4px;right:-2px;font-size:7px;background:var(--teal);color:#000;border-radius:3px;padding:1px 3px;font-family:'Syne',sans-serif;font-weight:700}
+
+.content{padding:22px 28px;max-width:1100px}
+.section{display:none}
+.section.active{display:block}
+
+.alert-banner{background:#ff4d6d18;border:1px solid #ff4d6d44;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start}
+.alert-dot{width:8px;height:8px;border-radius:50%;background:var(--red);margin-top:4px;flex-shrink:0;box-shadow:0 0 8px var(--red)}
+.alert-text{font-size:12px;color:#ffb3bf;line-height:1.6}
+.alert-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--red);margin-bottom:4px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px}
+.card-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.card-title::before{content:'';width:3px;height:10px;border-radius:2px;background:var(--purple)}
+.card-title.teal-accent::before{background:var(--teal)}
+
+.metric-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.metric-label{font-size:10px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px}
+.metric-value{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;line-height:1}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.metric-badge{display:inline-block;font-size:9px;padding:2px 7px;border-radius:4px;margin-top:6px;font-family:'Syne',sans-serif;font-weight:600}
+.badge-red{background:var(--red-dim);color:var(--red)}
+.badge-amber{background:var(--amber-dim);color:var(--amber)}
+.badge-green{background:var(--green-dim);color:var(--green)}
+.badge-blue{background:var(--blue-dim);color:var(--blue)}
+.badge-teal{background:var(--teal-dim);color:var(--teal)}
+.badge-purple{background:var(--purple-dim);color:var(--purple)}
+
+.bm-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
+.bm-row:last-child{border-bottom:none}
+.bm-name{flex:1;font-size:12px;color:var(--text);min-width:140px}
+.bm-dates{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.bm-val{font-family:'Syne',sans-serif;font-weight:600;font-size:13px;min-width:48px;text-align:right}
+.bm-range{font-size:10px;color:var(--muted);min-width:80px;text-align:right}
+
+.flag-list{display:flex;flex-direction:column;gap:8px}
+.flag-item{display:flex;gap:10px;align-items:flex-start;padding:12px;background:var(--bg3);border-radius:10px;border-left:3px solid}
+.flag-item.red{border-color:var(--red)}
+.flag-item.amber{border-color:var(--amber)}
+.flag-item.green{border-color:var(--green)}
+.flag-item.teal{border-color:var(--teal)}
+.flag-item.purple{border-color:var(--purple)}
+.flag-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.flag-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;margin-bottom:2px}
+.flag-desc{font-size:11px;color:var(--muted);line-height:1.5}
+
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:1px;background:var(--border)}
+.tl-item{position:relative;padding:0 0 20px 16px}
+.tl-item::before{content:'';position:absolute;left:-8px;top:4px;width:8px;height:8px;border-radius:50%;border:2px solid var(--bg);background:var(--purple)}
+.tl-item.red::before{background:var(--red)}
+.tl-item.amber::before{background:var(--amber)}
+.tl-item.green::before{background:var(--green)}
+.tl-item.teal::before{background:var(--teal)}
+.tl-date{font-size:10px;color:var(--muted);margin-bottom:3px}
+.tl-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:3px}
+.tl-desc{font-size:11px;color:var(--muted);line-height:1.5}
+
+.cgm-stat{text-align:center;padding:16px;background:var(--bg3);border-radius:12px;border:1px solid var(--border)}
+.cgm-big{font-family:'Syne',sans-serif;font-weight:800;font-size:28px}
+.cgm-label{font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:0.05em}
+.tir-bar{height:12px;border-radius:6px;display:flex;overflow:hidden;margin:8px 0}
+.tir-seg{height:100%}
+
+.sec-hdr{display:flex;align-items:baseline;gap:10px;margin-bottom:20px}
+.sec-hdr h2{font-family:'Syne',sans-serif;font-size:20px;font-weight:700}
+.sec-hdr span{font-size:11px;color:var(--muted)}
+.section-gap{margin-bottom:20px}
+
+.chart-wrap{position:relative;height:180px;margin-top:8px}
+
+/* PHYSIO SPECIFIC */
+.body-diagram{width:100%;max-width:320px;margin:0 auto;position:relative}
+.shoulder-highlight{animation:pulse-shoulder 2s ease-in-out infinite}
+@keyframes pulse-shoulder{0%,100%{opacity:0.6}50%{opacity:1}}
+.rom-track{margin-bottom:12px}
+.rom-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px}
+.rom-label span{color:var(--muted)}
+.rom-bar-bg{height:8px;background:var(--dim);border-radius:4px;overflow:hidden}
+.rom-bar-fill{height:100%;border-radius:4px;transition:width 0.8s ease}
+.pain-scale{display:flex;gap:4px;margin-top:8px}
+.pain-dot{flex:1;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:default;transition:all 0.2s;border:1px solid var(--border)}
+.pain-active{border-color:var(--amber);transform:scale(1.05)}
+.session-log{display:flex;flex-direction:column;gap:6px}
+.session-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)}
+.session-date{font-size:10px;color:var(--muted);min-width:80px}
+.session-desc{flex:1;font-size:12px}
+.session-badge{font-size:9px;padding:2px 8px;border-radius:4px;font-family:'Syne',sans-serif;font-weight:600;white-space:nowrap}
+.placeholder-note{background:var(--teal-dim);border:1px solid #2dd4bf44;border-radius:12px;padding:16px;font-size:12px;color:#a7f3d0;line-height:1.7}
+.placeholder-note strong{font-family:'Syne',sans-serif;display:block;font-size:13px;margin-bottom:6px;color:var(--teal)}
+
+/* CALM */
+.calm-card{background:var(--bg3);border:1px solid var(--border2);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px}
+.calm-score-ring{width:100px;height:100px;margin:0 auto 16px;position:relative}
+.calm-score-ring svg{width:100%;height:100%}
+.calm-score-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.calm-big{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:var(--amber)}
+.calm-small{font-size:9px;color:var(--muted)}
+.calm-priorities{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.calm-priority{background:var(--bg4);border-radius:10px;padding:12px;border:1px solid var(--border)}
+.cp-icon{font-size:20px;margin-bottom:6px}
+.cp-label{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;margin-bottom:2px}
+.cp-val{font-size:10px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="avatar">KS</div>
+    <div>
+      <div class="patient-name">Khushal Solanki</div>
+      <div class="patient-meta">
+        <span>Male · 28 yrs</span>
+        <span class="meta-pill">DOB: 07 Nov 1997</span>
+        <span class="meta-pill blood">Blood: B+ve</span>
+        <span class="meta-pill">177 cm</span>
+        <span class="meta-pill">Thane, MH</span>
+      </div>
+    </div>
+  </div>
+  <div class="score-pill">
+    <div class="score-num">52</div>
+    <div class="score-label">Health Score<span>Needs attention</span></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showTab('overview',this)">Overview</button>
+  <button class="nav-btn" onclick="showTab('biomarkers',this)">Biomarkers</button>
+  <button class="nav-btn" onclick="showTab('glucose',this)">Glucose / CGM</button>
+  <button class="nav-btn" onclick="showTab('cardio',this)">Cardio</button>
+  <button class="nav-btn" onclick="showTab('body',this)">Body Comp</button>
+  <button class="nav-btn new-tag" onclick="showTab('physio',this)">Physio</button>
+  <button class="nav-btn" onclick="showTab('timeline',this)">Timeline</button>
+  <button class="nav-btn" onclick="showTab('calm',this)">Screen-Light</button>
+</div>
+
+<div class="content">
+
+<!-- OVERVIEW -->
+<div id="tab-overview" class="section active">
+  <div class="sec-hdr"><h2>Overview</h2><span>Last updated 17 May 2026</span></div>
+  <div class="alert-banner section-gap">
+    <div class="alert-dot"></div>
+    <div class="alert-text">
+      <div class="alert-title">3 critical findings requiring medical attention</div>
+      HbA1c 7.1% confirms active Type 2 Diabetes — improving from 7.8% but still diabetic range. LDL 197 mg/dL (Very High) with HDL 37 (Low) — cardiovascular risk is severe for age 28. Persistent eosinophilia across 3 consecutive tests (7.4–7.9%) requires investigation.
+    </div>
+  </div>
+  <div class="grid4 section-gap">
+    <div class="metric-card">
+      <div class="metric-label">HbA1c</div>
+      <div class="metric-value" style="color:var(--red)">7.1%</div>
+      <div class="metric-sub">eAG 157 mg/dL</div>
+      <div class="metric-badge badge-amber">↓ from 7.8%</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">LDL Cholesterol</div>
+      <div class="metric-value" style="color:var(--red)">197</div>
+      <div class="metric-sub">mg/dL · Very High</div>
+      <div class="metric-badge badge-red">↑ from 192</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">HDL Cholesterol</div>
+      <div class="metric-value" style="color:var(--amber)">37</div>
+      <div class="metric-sub">mg/dL · Low</div>
+      <div class="metric-badge badge-amber">↑ from 32</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Right Shoulder</div>
+      <div class="metric-value" style="color:var(--amber)">—</div>
+      <div class="metric-sub">Frozen shoulder</div>
+      <div class="metric-badge badge-purple">No tests yet</div>
+    </div>
+  </div>
+  <div class="grid2 section-gap">
+    <div class="card">
+      <div class="card-title">Critical findings</div>
+      <div class="flag-list">
+        <div class="flag-item red"><div class="flag-icon">◈</div><div><div class="flag-title">Type 2 Diabetes — Active</div><div class="flag-desc">HbA1c 7.8% → 7.1% improving. Urine glucose 1+ Jan 2026. CGM peaks to 315 mg/dL. Mean CGM glucose 121–160 mg/dL.</div></div></div>
+        <div class="flag-item red"><div class="flag-icon">◈</div><div><div class="flag-title">Severe Dyslipidemia</div><div class="flag-desc">LDL 197, Total Chol 267, HDL 37, TG 166. LDL/HDL ratio 5.3. Non-HDL 230. High CV risk at 28.</div></div></div>
+        <div class="flag-item amber"><div class="flag-icon">◇</div><div><div class="flag-title">Persistent Eosinophilia</div><div class="flag-desc">Oct-24 (7.6%), Jan-26 (7.4%), May-26 (7.9%). Absolute count 688–709. Allergy or parasitic cause likely.</div></div></div>
+        <div class="flag-item amber"><div class="flag-icon">◇</div><div><div class="flag-title">Liver Enzymes Elevated (Jan 2026)</div><div class="flag-desc">ALT 57, GGT 69. Consistent with fatty liver. Not retested in May 2026 — retest due.</div></div></div>
+        <div class="flag-item teal"><div class="flag-icon">◎</div><div><div class="flag-title">Frozen Shoulder (Right) — No tests yet</div><div class="flag-desc">Self-reported. No imaging or physio assessment documented. Tracking started — see Physio tab.</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Positive findings</div>
+      <div class="flag-list">
+        <div class="flag-item green"><div class="flag-icon">◉</div><div><div class="flag-title">HbA1c Improving</div><div class="flag-desc">7.8% → 7.1% in 4 months. A 0.7% improvement is clinically significant.</div></div></div>
+        <div class="flag-item green"><div class="flag-icon">◉</div><div><div class="flag-title">Kidney Function — Excellent</div><div class="flag-desc">eGFR 128 (above age average of 116). Creatinine 0.71. No diabetic nephropathy.</div></div></div>
+        <div class="flag-item green"><div class="flag-icon">◉</div><div><div class="flag-title">ECG Normal</div><div class="flag-desc">AV rhythm, HR 75 bpm, QTc 434 ms. Confirmed normal by Dr. Subhash Dey (DM Cardiology).</div></div></div>
+        <div class="flag-item green"><div class="flag-icon">◉</div><div><div class="flag-title">HDL & TG Improving</div><div class="flag-desc">HDL 32 → 37 (+15%), TG 201 → 166 (−17%). Positive lipid direction.</div></div></div>
+        <div class="flag-item green"><div class="flag-icon">◉</div><div><div class="flag-title">Haemoglobin Fully Recovered</div><div class="flag-desc">Post-malaria Hb was 13.2 (Jul-25). Now 15.7 (May-26) — full recovery.</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">HbA1c · LDL · HDL trend</div>
+    <div class="chart-wrap"><canvas id="overviewChart"></canvas></div>
+  </div>
+</div>
+
+<!-- BIOMARKERS -->
+<div id="tab-biomarkers" class="section">
+  <div class="sec-hdr"><h2>Biomarker Database</h2><span>All extracted values across all dates</span></div>
+  <div class="card section-gap">
+    <div class="card-title">Metabolic / Glucose</div>
+    <div class="bm-row"><div class="bm-name">HbA1c</div><div class="bm-dates"><span style="font-size:10px;color:var(--muted)">Jan-26</span><span class="bm-val" style="color:var(--red)">7.8%</span><span style="font-size:10px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--amber)">7.1%</span></div><div class="bm-range">target &lt;6.5%</div><div class="metric-badge badge-amber">DIABETIC</div></div>
+    <div class="bm-row"><div class="bm-name">eAG</div><div class="bm-dates"><span style="font-size:10px;color:var(--muted)">Jan-26</span><span class="bm-val" style="color:var(--red)">177</span><span style="font-size:10px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--amber)">157</span></div><div class="bm-range">target &lt;120</div><div class="metric-badge badge-amber">HIGH</div></div>
+  </div>
+  <div class="card section-gap">
+    <div class="card-title">Lipid Panel</div>
+    <div class="bm-row"><div class="bm-name">Total Cholesterol</div><div class="bm-dates"><span style="font-size:10px;color:var(--muted)">Jan-26</span><span class="bm-val" style="color:var(--red)">264</span><span style="font-size:10px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--red)">267</span></div><div class="bm-range">target &lt;200</div><div class="metric-badge badge-red">HIGH</div></div>
+    <div class="bm-row"><div class="bm-name">LDL Cholesterol</div><div class="bm-dates"><span style="font-size:10px;color:var(--muted)">Jan-26</span><span class="bm-val" style="color:var(--red)">192</span><span style="font-size:10px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--red)">197</span></div><div class="bm-range">target &lt;100</div><div class="metric-badge badge-red">VERY HIGH</div></div>
+    <div class="bm-row"><div class="bm-name">HDL Cholesterol</div><div class="bm-dates"><span style="font-size:10px;color:var(--muted)">Jan-26</span><span class="bm-val" style="color:var(--amber)">32</span><span style="font-size:10px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--amber)">37</span></div><div class="bm-range">target &gt;60</div><div class="metric-badge badge-amber">LOW</div></div>
+    <div class="bm-row"><div class="bm-name">Triglycerides</div><div class="bm-dates"><span style="font-size:10px;color:var(--muted)">Jan-26</span><span class="bm-val" style="color:var(--red)">201</span><span style="font-size:10px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--amber)">166</span></div><div class="bm-range">target &lt;150</div><div class="metric-badge badge-amber">BORDERLINE</div></div>
+    <div class="bm-row"><div class="bm-name">VLDL</div><div class="bm-dates"><span style="font-size:10px;color:var(--muted)">Jan-26</span><span class="bm-val" style="color:var(--amber)">40</span><span style="font-size:10px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--green)">33</span></div><div class="bm-range">6–38</div><div class="metric-badge badge-green">IMPROVING</div></div>
+    <div class="bm-row"><div class="bm-name">Non-HDL Cholesterol</div><div class="bm-dates"><span style="font-size:10px;color:var(--muted)">Jan-26</span><span class="bm-val" style="color:var(--red)">232</span><span style="font-size:10px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--red)">230</span></div><div class="bm-range">target &lt;130</div><div class="metric-badge badge-red">VERY HIGH</div></div>
+    <div class="bm-row"><div class="bm-name">LDL/HDL Ratio</div><div class="bm-dates"><span style="font-size:10px;color:var(--muted)">Jan-26</span><span class="bm-val" style="color:var(--red)">6.0</span><span style="font-size:10px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--red)">5.3</span></div><div class="bm-range">2.5–3.5</div><div class="metric-badge badge-red">HIGH</div></div>
+  </div>
+  <div class="grid2 section-gap">
+    <div class="card">
+      <div class="card-title">CBC — Haematology</div>
+      <div class="bm-row"><div class="bm-name">Haemoglobin</div><div class="bm-dates"><span style="font-size:9px;color:var(--muted)">Oct-24</span><span class="bm-val" style="font-size:11px">14.8</span><span style="font-size:9px;color:var(--muted)">Jul-25</span><span class="bm-val" style="color:var(--red);font-size:11px">13.7</span><span style="font-size:9px;color:var(--muted)">Jan-26</span><span class="bm-val" style="font-size:11px">15.0</span><span style="font-size:9px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--green);font-size:11px">15.7</span></div><div class="bm-range">14–18 g/dL</div></div>
+      <div class="bm-row"><div class="bm-name">WBC Count</div><div class="bm-dates"><span style="font-size:9px;color:var(--muted)">Jul-25</span><span class="bm-val" style="font-size:11px">6500</span><span style="font-size:9px;color:var(--muted)">Jan-26</span><span class="bm-val" style="font-size:11px">9300</span><span style="font-size:9px;color:var(--muted)">May-26</span><span class="bm-val" style="font-size:11px">8970</span></div><div class="bm-range">4300–10300</div></div>
+      <div class="bm-row"><div class="bm-name">Eosinophils %</div><div class="bm-dates"><span style="font-size:9px;color:var(--muted)">Oct-24</span><span class="bm-val" style="color:var(--amber);font-size:11px">7.6%</span><span style="font-size:9px;color:var(--muted)">Jan-26</span><span class="bm-val" style="color:var(--amber);font-size:11px">7.4%</span><span style="font-size:9px;color:var(--muted)">May-26</span><span class="bm-val" style="color:var(--red);font-size:11px">7.9%</span></div><div class="bm-range">1–6%</div><div class="metric-badge badge-amber">PERSISTENT</div></div>
+      <div class="bm-row"><div class="bm-name">Platelets</div><div class="bm-dates"><span style="font-size:9px;color:var(--muted)">Jul-25</span><span class="bm-val" style="font-size:11px">227</span><span style="font-size:9px;color:var(--muted)">Jan-26</span><span class="bm-val" style="font-size:11px">296</span><span style="font-size:9px;color:var(--muted)">May-26</span><span class="bm-val" style="font-size:11px">304</span></div><div class="bm-range">140–440 ×10³</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Liver & Kidney (Jan 2026)</div>
+      <div class="bm-row"><div class="bm-name">SGPT / ALT</div><div class="bm-dates"><span class="bm-val" style="color:var(--amber)">57</span></div><div class="bm-range">0–41 U/L</div><div class="metric-badge badge-amber">HIGH</div></div>
+      <div class="bm-row"><div class="bm-name">GGT</div><div class="bm-dates"><span class="bm-val" style="color:var(--amber)">69</span></div><div class="bm-range">&lt;60 U/L</div><div class="metric-badge badge-amber">HIGH</div></div>
+      <div class="bm-row"><div class="bm-name">SGOT / AST</div><div class="bm-dates"><span class="bm-val" style="color:var(--green)">26</span></div><div class="bm-range">0–40 U/L</div><div class="metric-badge badge-green">NORMAL</div></div>
+      <div class="bm-row"><div class="bm-name">Creatinine</div><div class="bm-dates"><span class="bm-val" style="color:var(--green)">0.71</span></div><div class="bm-range">0.67–1.17</div><div class="metric-badge badge-green">NORMAL</div></div>
+      <div class="bm-row"><div class="bm-name">eGFR</div><div class="bm-dates"><span class="bm-val" style="color:var(--green)">128</span></div><div class="bm-range">&gt;90 mL/min</div><div class="metric-badge badge-green">EXCELLENT</div></div>
+      <div class="bm-row"><div class="bm-name">Uric Acid</div><div class="bm-dates"><span class="bm-val" style="color:var(--green)">5.2</span></div><div class="bm-range">3.4–7.0</div><div class="metric-badge badge-green">NORMAL</div></div>
+      <div class="bm-row"><div class="bm-name">Sodium / Potassium</div><div class="bm-dates"><span class="bm-val" style="color:var(--green)">138</span><span class="bm-val" style="color:var(--green)">4.38</span></div><div class="bm-range">Normal</div><div class="metric-badge badge-green">NORMAL</div></div>
+      <div class="bm-row"><div class="bm-name">Total Bilirubin</div><div class="bm-dates"><span style="font-size:9px;color:var(--muted)">Jul-25</span><span class="bm-val" style="font-size:11px">0.81</span><span style="font-size:9px;color:var(--muted)">Jan-26</span><span class="bm-val" style="font-size:11px">0.63</span></div><div class="bm-range">0–1.2</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Lipid trend</div>
+    <div class="chart-wrap"><canvas id="lipidChart"></canvas></div>
+  </div>
+</div>
+
+<!-- GLUCOSE -->
+<div id="tab-glucose" class="section">
+  <div class="sec-hdr"><h2>Glucose Intelligence</h2><span>CGM · Feb–Mar 2026 · Ultrahuman</span></div>
+  <div class="grid2 section-gap">
+    <div class="card">
+      <div class="card-title">Stint 1 · 1–15 Feb 2026</div>
+      <div class="grid3" style="margin-bottom:12px">
+        <div class="cgm-stat"><div class="cgm-big" style="color:var(--green)">90.7%</div><div class="cgm-label">Time in Range</div></div>
+        <div class="cgm-stat"><div class="cgm-big" style="color:var(--amber)">121</div><div class="cgm-label">Mean Glucose</div></div>
+        <div class="cgm-stat"><div class="cgm-big" style="color:var(--red)">315</div><div class="cgm-label">Peak mg/dL</div></div>
+      </div>
+      <div class="tir-bar"><div class="tir-seg" style="width:2.1%;background:var(--red)"></div><div class="tir-seg" style="width:90.7%;background:var(--green)"></div><div class="tir-se
